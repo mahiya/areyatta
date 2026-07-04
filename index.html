@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1115">
+  <meta name="description" content="毎日のルーチンタスクをチェックして習慣化を支援する PWA アプリ">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="あれやった？">
+  <title>あれやった？</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+  <!-- ホーム画面 -->
+  <section id="homeView" class="view">
+    <header class="app-header">
+      <h1 class="app-title">あれやった？</h1>
+      <div class="header-actions">
+        <button id="reorderDoneBtn" class="text-btn hidden" type="button">完了</button>
+        <button id="menuBtn" class="icon-btn" type="button" aria-label="メニュー">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+            <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <p class="hint" id="homeHint">セルを長押しすると、その日のタスクをチェック / 解除できます</p>
+
+    <div id="taskList" class="task-list"></div>
+
+    <div id="emptyState" class="empty-state hidden">
+      <div class="empty-icon">🌱</div>
+      <p>まだタスクがありません。<br>右下の＋ボタンから、習慣にしたいタスクを登録しましょう。</p>
+    </div>
+
+    <button id="addTaskBtn" class="fab" type="button" aria-label="タスクを追加">＋</button>
+  </section>
+
+  <!-- タスク詳細画面 -->
+  <section id="detailView" class="view hidden">
+    <header class="app-header">
+      <button id="backBtn" class="icon-btn" type="button" aria-label="戻る">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
+      <div class="detail-heading">
+        <span id="detailIcon" class="detail-icon"></span>
+        <h2 id="detailTitle" class="detail-title"></h2>
+      </div>
+      <button id="editTaskBtn" class="text-btn" type="button">編集</button>
+    </header>
+
+    <div class="detail-body">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="statRate">-</div>
+          <div class="stat-label">達成率（実行日÷経過日）</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statWeek">-</div>
+          <div class="stat-label">今週の実行</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statStreak">-</div>
+          <div class="stat-label">現在の連続日数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statLongest">-</div>
+          <div class="stat-label">最長の連続日数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statTotal">-</div>
+          <div class="stat-label">合計実行日数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statSince">-</div>
+          <div class="stat-label">記録開始日</div>
+        </div>
+      </div>
+
+      <h3 class="section-title">実行ヒートマップ（過去1年）</h3>
+      <div class="heatmap-scroll" id="heatmapScroll">
+        <div id="heatmap" class="heatmap"></div>
+      </div>
+
+      <button id="deleteTaskBtn" class="danger-btn" type="button">このタスクを削除</button>
+    </div>
+  </section>
+
+  <!-- タスク登録・編集ダイアログ -->
+  <dialog id="taskDialog" class="dialog">
+    <form method="dialog" id="taskForm">
+      <h2 id="taskDialogTitle" class="dialog-title">新しいタスク</h2>
+
+      <label class="field-label" for="taskTitleInput">タイトル</label>
+      <input id="taskTitleInput" class="text-input" type="text" maxlength="20"
+             placeholder="例：筋トレ" autocomplete="off" required>
+
+      <span class="field-label">アイコン</span>
+      <div id="emojiGrid" class="emoji-grid" role="radiogroup" aria-label="アイコンを選択"></div>
+
+      <span class="field-label">週に何日以上やる？</span>
+      <div id="goalPicker" class="goal-picker" role="radiogroup" aria-label="週の目標日数"></div>
+
+      <div class="dialog-actions">
+        <button type="button" id="taskCancelBtn" class="ghost-btn">キャンセル</button>
+        <button type="submit" id="taskSaveBtn" class="primary-btn">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- メニューダイアログ -->
+  <dialog id="menuDialog" class="dialog menu-dialog">
+    <div class="menu-list">
+      <button type="button" id="menuReorder" class="menu-item">↕️ タスクを並び替え</button>
+      <button type="button" id="menuExport" class="menu-item">📤 データをエクスポート (JSON)</button>
+      <button type="button" id="menuImport" class="menu-item">📥 データをインポート (JSON)</button>
+      <button type="button" id="menuClose" class="menu-item menu-cancel">閉じる</button>
+    </div>
+  </dialog>
+
+  <!-- 確認ダイアログ -->
+  <dialog id="confirmDialog" class="dialog">
+    <p id="confirmMessage" class="confirm-message"></p>
+    <div class="dialog-actions">
+      <button type="button" id="confirmCancelBtn" class="ghost-btn">キャンセル</button>
+      <button type="button" id="confirmOkBtn" class="danger-btn">OK</button>
+    </div>
+  </dialog>
+
+  <input type="file" id="importFileInput" accept=".json,application/json" class="hidden">
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
