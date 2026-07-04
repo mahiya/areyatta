@@ -96,18 +96,13 @@ body {
   border-radius: 8px;
 }
 
-.hint {
-  color: var(--muted);
-  font-size: 12px;
-  margin: 2px 0 14px;
-}
-
 /* ---------- タスクカード ---------- */
 
 .task-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-top: 10px;
 }
 
 .task-card {

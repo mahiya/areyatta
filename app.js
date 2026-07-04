@@ -298,7 +298,6 @@ function renderHome() {
 
   const tasks = sortedTasks();
   $("emptyState").classList.toggle("hidden", tasks.length > 0);
-  $("homeHint").classList.toggle("hidden", tasks.length === 0);
   $("reorderDoneBtn").classList.toggle("hidden", !reorderMode);
 
   const t0 = today();
